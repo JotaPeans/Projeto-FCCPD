@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  challenge_3_database:
+    image: postgres:17-alpine
+    container_name: challenge_3_database
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: postgres
+    volumes:
+      - challenge_3_database_volume:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - challenge_3_network
+
+  challenge_3_cache:
+    image: redis:alpine
+    container_name: challenge_3_cache
+    networks:
+      - challenge_3_network
+    ports:
+      - "6379:6379"
+    restart: always
+
+  challenge_3_web:
+    build: .
+    container_name: challenge_3_web_app
+    volumes:
+      - .:/app
+    depends_on:
+      - challenge_3_database
+      - challenge_3_cache
+    networks:
+      - challenge_3_network
+    ports:
+      - "3000:3000"
+
+# Definição de Rede
+networks:
+  challenge_3_network:
+    driver: bridge
+
+#definição de volume (para persistência do DB, boa prática)
+volumes:
+  challenge_3_database_volume:

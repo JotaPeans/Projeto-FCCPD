@@ -1,0 +1,20 @@
+services:
+  challenge_server_1:
+    build: .
+    networks:
+      - challenge-network-1
+    ports:
+      - "8080:8080"
+
+  challenge_client_1:
+    image: alpine/curl
+    command: /bin/sh -c "while true; do echo 'Client requesting server'; curl -s http://challenge_server_1:8080; sleep 5; done"
+    networks:
+      - challenge-network-1
+    depends_on:
+      - challenge_server_1
+
+#rede customizada
+networks:
+  challenge-network-1:
+    driver: bridge

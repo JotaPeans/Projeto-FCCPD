@@ -1,0 +1,15 @@
+services:
+  challenge_2_database:
+    image: postgres:17-alpine
+    container_name: challenge_2_database
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: postgres
+    volumes:
+      - challenge_2_database_volume:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+
+volumes:
+  challenge_2_database_volume:
