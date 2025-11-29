@@ -106,7 +106,7 @@ Este desafio tem como objetivo principal utilizar o Docker Compose para orquestr
 **Pré-requisitos**: Docker e Docker Compose instalados.
 
 1.  Navegue até o diretório do desafio ( `desafio3` )
-2.  Inicie os containers em modo _detached_ (segundo plano):
+2.  Inicie os containers em segundo plano:
     ```bash
     docker compose up
     ```
@@ -130,7 +130,7 @@ Para encerrar a execução e remover containers/rede: `docker compose down -v`
 
 ### ARQUITETURA
 
-Rede: Uma rede do tipo bridge chamada `challenge_3_database_volume` foi criada para conectar os três serviços.
+Rede: Uma rede do tipo bridge chamada `challenge_3_database_network` foi criada para conectar os três serviços.
 
 Container 1 (Database): Usa a imagem `postgres:17-alpine`. Serviço de banco de dados **PostgreSQL**.
 
@@ -152,5 +152,57 @@ Assim, o servidor web acessa:
 
 **Serviço Web com Bun + Elysia:** O container `challenge_3_web` é construído a partir da imagem base definida no Dockerfile (que utiliza oven/bun:latest).
 Essa escolha foi feita porque o servidor foi desenvolvido utilizando Bun e o framework Elysia, permitindo alta performance e inicialização rápida. A aplicação expõe a rota `/` na porta `3000`, que é mapeada para o host pelo Compose.
+
+---
+
+## Desafio 4: Docker Compose Orquestrando Serviços
+
+Este desafio apresenta uma arquitetura real de microsserviços, composta por dois serviços independentes que interagem exclusivamente por meio de requisições HTTP. O objetivo é demonstrar, na prática, o isolamento de responsabilidades entre os componentes e validar que a comunicação entre eles ocorre corretamente através da rede configurada no Docker.
+
+---
+
+### INSTRUÇÕES DE EXECUÇÃO
+
+**Pré-requisitos**: Docker e Docker Compose instalados.
+
+1.  Navegue até o diretório do desafio ( `desafio4` )
+2.  Inicie os containers em segundo plano:
+    ```bash
+    docker compose up
+    ```
+3.  **Teste de Comunicação:** Acesse o container web pelo navegador utilizando a url `http://localhost:8080`:
+
+    Ou pode ser acessado pelo terminal executando o comando:
+
+    ```curl
+    curl http://localhost:8080
+    ```
+
+    A resposta esperada é um json contendo uma lista de informações de usuários que foram pegos a partir do outro serviço (`challenge_4_service_a`)
+
+---
+
+### ARQUITETURA
+
+Rede: Uma rede do tipo bridge chamada `challenge_4_database_network` foi criada para conectar os três serviços.
+
+Container 1 (Web): Usa a imagem `oven/bun:latest`. Essa imagem foi usada porque o servidor é construído com Bun. Além disso, o servidor web foi construído com Elysia, proporcionando acesso web na porta `8081` na rota `/users`.
+
+Container 2 (Web): Usa a imagem `oven/bun:latest`. Essa imagem foi usada porque o servidor é construído com Bun. Além disso, o servidor web foi construído com Elysia, proporcionando acesso web na porta `8080` na rota `/`.
+
+---
+
+### DECISÕES TÉCNICAS
+
+**Docker Compose e Orquestração:** Foi utilizado para definir toda a infraestrutura do desafio de forma declarativa, garantindo que cada serviço, `challenge_4_service_a` e `challenge_4_service_b`, seja criado com suas respectivas configurações, redes e variáveis de ambiente.
+
+**Dependências (`depends_on`):** O serviço `challenge_4_service_b` foi configurado com depends_on: [`challenge_4_service_a`].
+Isso assegura que o `challenge_4_service_a` seja iniciado antes que o `challenge_4_service_b` tente subir, evitando falhas de conexão.
+
+**Nomes de serviço como DNS:** Dentro da rede Docker (`challenge_4_network`), o container `challenge_4_service_b` utiliza o nome do serviço `challenge_4_service_a` como hostname para realizar acesso ao outro serviço localizado em outro container.
+Assim, o servidor web acessa:
+
+**Serviço Web com Bun + Elysia:** O container `challenge_4_service_b` é construído a partir da imagem base definida no Dockerfile (que utiliza oven/bun:latest).
+Essa escolha foi feita porque o servidor foi desenvolvido utilizando Bun e o framework Elysia, permitindo alta performance e inicialização rápida. A aplicação expõe a rota `/users` na porta `8081`, que é mapeada para o host pelo Compose. Ja o container `challenge_4_service_a` expõe a rota `/` na porta `8080`, que é mapeada para o host pelo Compose.
 
 ---

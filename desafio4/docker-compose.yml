@@ -1,0 +1,26 @@
+services:
+  challenge_4_service_a:
+    build: ./service_a
+    container_name: challenge_4_service_a
+    ports:
+      - "8081:8080"
+    networks:
+      - challenge_4_network
+    restart: always
+
+  challenge_4_service_b:
+    build: ./service_b
+    container_name: challenge_4_service_b
+    depends_on:
+      - challenge_4_service_a
+    environment:
+      SERVICE_A_URL: http://challenge_4_service_a:8080
+    ports:
+      - "8080:8080"
+    networks:
+      - challenge_4_network
+    restart: always
+
+networks:
+  challenge_4_network:
+    driver: bridge
