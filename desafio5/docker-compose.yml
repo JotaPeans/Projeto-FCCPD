@@ -1,0 +1,42 @@
+services:
+  challenge_5_users_service:
+    build: ./users_service
+    container_name: challenge_5_users_service
+    ports:
+      - "8081:8080"
+    networks:
+      - challenge_5_network
+    volumes:
+      - ./users_service:/app
+    restart: always
+
+  challenge_5_orders_service:
+    build: ./orders_service
+    container_name: challenge_5_orders_service
+    depends_on:
+      - challenge_5_users_service
+    ports:
+      - "8080:8080"
+    networks:
+      - challenge_5_network
+    volumes:
+      - ./orders_service:/app
+    restart: always
+
+  challenge_5_gateway:
+    image: nginx:alpine
+    container_name: challenge_5_gateway
+    ports:
+      - "80:80"
+    volumes:
+      - ./gateway/nginx.conf:/etc/nginx/nginx.conf:ro
+    networks:
+      - challenge_5_network
+    depends_on:
+      - challenge_5_users_service
+      - challenge_5_orders_service
+    restart: always
+
+networks:
+  challenge_5_network:
+    driver: bridge
