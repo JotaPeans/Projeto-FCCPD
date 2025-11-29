@@ -13,8 +13,6 @@ services:
   challenge_5_orders_service:
     build: ./orders_service
     container_name: challenge_5_orders_service
-    depends_on:
-      - challenge_5_users_service
     ports:
       - "8080:8080"
     networks:

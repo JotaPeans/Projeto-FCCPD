@@ -108,7 +108,7 @@ Este desafio tem como objetivo principal utilizar o Docker Compose para orquestr
 1.  Navegue até o diretório do desafio ( `desafio3` )
 2.  Inicie os containers em segundo plano:
     ```bash
-    docker compose up
+    docker compose up -d
     ```
 3.  **Teste de Comunicação:** Acesse o container web pelo navegador utilizando a url `http://localhost:3000`:
 
@@ -130,7 +130,7 @@ Para encerrar a execução e remover containers/rede: `docker compose down -v`
 
 ### ARQUITETURA
 
-Rede: Uma rede do tipo bridge chamada `challenge_3_database_network` foi criada para conectar os três serviços.
+Rede: Uma rede do tipo bridge chamada `challenge_3_network` foi criada para conectar os três serviços.
 
 Container 1 (Database): Usa a imagem `postgres:17-alpine`. Serviço de banco de dados **PostgreSQL**.
 
@@ -150,6 +150,9 @@ Isso assegura que o PostgreSQL e o Redis sejam iniciados antes que a aplicação
 **Nomes de serviço como DNS:** Dentro da rede Docker (`challenge_3_network`), o container `challenge_3_web` utiliza os nomes dos serviço `challenge_3_database` e `challenge_3_cache` como hostnames para realizar acesso aos outros serviços localizados em outros containers.
 Assim, o servidor web acessa:
 
+- `http://challenge_3_database:5432` para se conectar ao PostgreSQL.
+- `http://challenge_3_cache:6379` para se conectar ao Redis.
+
 **Serviço Web com Bun + Elysia:** O container `challenge_3_web` é construído a partir da imagem base definida no Dockerfile (que utiliza oven/bun:latest).
 Essa escolha foi feita porque o servidor foi desenvolvido utilizando Bun e o framework Elysia, permitindo alta performance e inicialização rápida. A aplicação expõe a rota `/` na porta `3000`, que é mapeada para o host pelo Compose.
 
@@ -168,7 +171,7 @@ Este desafio apresenta uma arquitetura real de microsserviços, composta por doi
 1.  Navegue até o diretório do desafio ( `desafio4` )
 2.  Inicie os containers em segundo plano:
     ```bash
-    docker compose up
+    docker compose up -d
     ```
 3.  **Teste de Comunicação:** Acesse o container web pelo navegador utilizando a url `http://localhost:8080`:
 
@@ -184,7 +187,7 @@ Este desafio apresenta uma arquitetura real de microsserviços, composta por doi
 
 ### ARQUITETURA
 
-Rede: Uma rede do tipo bridge chamada `challenge_4_database_network` foi criada para conectar os três serviços.
+Rede: Uma rede do tipo bridge chamada `challenge_4_network` foi criada para conectar os três serviços.
 
 Container 1 (Web): Usa a imagem `oven/bun:latest`. Essa imagem foi usada porque o servidor é construído com Bun. Além disso, o servidor web foi construído com Elysia, proporcionando acesso web na porta `8081` na rota `/users`.
 
@@ -202,7 +205,77 @@ Isso assegura que o `challenge_4_service_a` seja iniciado antes que o `challenge
 **Nomes de serviço como DNS:** Dentro da rede Docker (`challenge_4_network`), o container `challenge_4_service_b` utiliza o nome do serviço `challenge_4_service_a` como hostname para realizar acesso ao outro serviço localizado em outro container.
 Assim, o servidor web acessa:
 
-**Serviço Web com Bun + Elysia:** O container `challenge_4_service_b` é construído a partir da imagem base definida no Dockerfile (que utiliza oven/bun:latest).
-Essa escolha foi feita porque o servidor foi desenvolvido utilizando Bun e o framework Elysia, permitindo alta performance e inicialização rápida. A aplicação expõe a rota `/users` na porta `8081`, que é mapeada para o host pelo Compose. Ja o container `challenge_4_service_a` expõe a rota `/` na porta `8080`, que é mapeada para o host pelo Compose.
+- `http://challenge_4_service_a:8080` para se conectar ao outro serviço.
+
+**Serviço Web com Bun + Elysia:** Ambos os containers `challenge_4_service_a` e `challenge_4_service_b` são construídos a partir da imagem base definida no Dockerfile (que utiliza oven/bun:latest).
+Essa escolha foi feita porque o servidor foi desenvolvido utilizando Bun e o framework Elysia, permitindo alta performance e inicialização rápida. O container `challenge_4_service_a` expõe a rota `/users` na porta `8081`, que é mapeada para o host pelo Compose. Ja o container `challenge_4_service_b` expõe a rota `/` na porta `8080`, em que exibe as informações vindas do serviço `challenge_4_service_a`.
 
 ---
+
+## Desafio 5: API Gateway orquestrando Microsserviços
+
+Este desafio implementa uma arquitetura de microsserviços em que o acesso externo é centralizado por meio de um API Gateway baseado em Nginx. O Gateway atua como o único ponto de entrada da aplicação. Sua responsabilidade principal é receber as requisições recebidas e redirecionar para os microsserviços apropriados. Esse serviço da API Gateway usa a rede interna do docker para usar o nome dos serviços como hostnames para realizar acesso aos outros serviços localizados em outros containers.
+
+---
+
+### INSTRUÇÕES DE EXECUÇÃO
+
+**Pré-requisitos**: Docker e Docker Compose instalados.
+
+1.  Navegue até o diretório do desafio ( `desafio5` )
+2.  Inicie os containers em segundo plano:
+    ```bash
+    docker compose up -d
+    ```
+3.  **Teste de Comunicação:** Acesse o container do serviço de usuarios pelo navegador utilizando a url `http://localhost:80/users`:
+
+    Ou pode ser acessado pelo terminal executando o comando:
+
+    ```curl
+    curl http://localhost:80/users
+    ```
+
+    A resposta esperada é um json contendo uma lista de informações de usuários
+
+4. **Teste de Comunicação:** Acesse o container do serviço de pedidos (orders) pelo navegador utilizando a url `http://localhost:80/orders`:
+
+    Ou pode ser acessado pelo terminal executando o comando:
+
+    ```curl
+    curl http://localhost:80/orders
+    ```
+
+    A resposta esperada é um json contendo uma lista de informações de pedidos.
+    
+---
+
+### ARQUITETURA
+
+Rede: Uma rede do tipo bridge chamada `challenge_5_network` foi criada para conectar os três serviços.
+
+Container 1 (Users): Usa a imagem `oven/bun:latest`. Essa imagem foi usada porque o servidor é construído com Bun. Além disso, o servidor web foi construído com Elysia, proporcionando acesso web na porta `8081` na rota `/users`.
+
+Container 2 (Orders): Usa a imagem `oven/bun:latest`. Essa imagem foi usada porque o servidor é construído com Bun. Além disso, o servidor web foi construído com Elysia, proporcionando acesso web na porta `8080` na rota `/orders`.
+
+Container 3 (Gateway): Usa a imagem `nginx:latest`. Essa imagem foi usada porque o servidor é construído com Nginx. Além disso, o servidor web foi configurado para redirecionar as requisições para os microsserviços apropriados, sendo eles: `challenge_5_users_service` e `challenge_5_orders_service`.
+
+---
+
+### DECISÕES TÉCNICAS
+
+**Docker Compose e Orquestração:** Foi utilizado para definir toda a infraestrutura do desafio de forma declarativa, garantindo que cada serviço, `challenge_5_users_service`, `challenge_5_orders_service` e `challenge_5_gateway`, seja criado com suas respectivas configurações, redes e variáveis de ambiente.
+
+**Dependências (`depends_on`):** O serviço `challenge_5_gateway` foi configurado com depends_on: `challenge_5_users_service` e `challenge_5_orders_service`.
+Isso assegura que o `challenge_5_users_service` e o `challenge_5_orders_service` sejam iniciados antes que o `challenge_5_gateway` tente subir, evitando falhas de conexão. 
+
+**Nomes de serviço como DNS:** Dentro da rede Docker (`challenge_5_network`), o container `challenge_5_gateway` utiliza o nome do serviço `challenge_5_users_service` e `challenge_5_orders_service` como hostnames para realizar acesso aos outros serviços localizados em outros containers.
+Assim, o servidor web acessa:
+
+- `http://challenge_5_users_service:8080/users` para acessar o serviço de usuários.
+- `http://challenge_5_orders_service:8080/orders` para acessar o serviço de pedidos.
+
+**Serviço Web com Bun + Elysia:** Ambos os containers dos microsserviços de usuarios (users) e pedidos (orders) foram construídos a partir da imagem base definida no Dockerfile (que utiliza oven/bun:latest).
+Essa escolha foi feita porque o servidor foi desenvolvido utilizando Bun e o framework Elysia, permitindo alta performance e inicialização rápida. As aplicações expõem as rotas `/users` e `/orders` na respectivas portas `8081` e `8080`, que são mapeadas para o host pelo Compose.
+
+**API Gateway com Nginx:** O container `challenge_5_gateway` é construído a partir da imagem nginx:latest.
+Essa escolha foi feita porque o servidor foi desenvolvido utilizando Nginx, permitindo alta performance e inicialização rápida. O servidor web foi configurado para redirecionar as requisições para os microsserviços apropriados, sendo eles: `challenge_5_users_service` e `challenge_5_orders_service`.
